@@ -1,0 +1,63 @@
+﻿@page "/fetchdata"
+@inject HttpClient Http
+
+<PageTitle>Weather forecast</PageTitle>
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <FluentDataGrid TGridItem="WeatherForecast"
+                    RowsData="forecasts"
+                    RowsDataKey="@(f => f.Id)"
+                    OnRowFocus="HandleRowFocus">
+        <PropertyColumn Title="Date"
+                        Property="@(t => t!.Date)" />
+        <PropertyColumn Title="Temp. (C)"
+                        Property="@(t => t!.TemperatureC)" />
+        <PropertyColumn Title="Temp. (F)"
+                        Property="@(t => t!.TemperatureF)" />
+        <PropertyColumn Title="Summary"
+                        Property="@(t => t!.Summary)" />
+    </FluentDataGrid>
+
+    <p>@_debug</p>
+}
+
+@code {
+    private IQueryable<WeatherForecast>? forecasts;
+    private string _debug;
+
+    protected override async Task OnInitializedAsync()
+    {
+        forecasts = (await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json"))!.AsQueryable();
+    }
+
+    private void HandleRowFocus(FluentDataGridRow<WeatherForecast> row)
+    {
+        var index = (int)row.RowIndex!;
+        var forecast = forecasts?.ElementAt(index - 1);
+
+        _debug = $"RowIndex: {index}; WeatherForcastId: {forecast?.Id}";
+    }
+
+    public class WeatherForecast
+    {
+        public int Id { get; set; }
+
+        public DateTime Date { get; set; }
+
+        public int TemperatureC { get; set; }
+
+        public string? Summary { get; set; }
+
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    }
+}
+
